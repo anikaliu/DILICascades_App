@@ -14,7 +14,7 @@ order_rdose_levels<-function(df){
 }
 
 format_direction=function(df){
-  df_new=df%>%mutate(direction=case_when(direction==-1~ 'Down-regulated',
-                                         direction==1 ~'Up-regulated'))
+  df_new=df%>%mutate(direction=case_when(direction==-1~ 'Down',
+                                         direction==1 ~'Up'))
   return(df_new)
 }

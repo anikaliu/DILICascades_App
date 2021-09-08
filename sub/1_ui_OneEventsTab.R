@@ -3,6 +3,11 @@ tabPanel(
   icon = icon("dot-circle",  lib = "font-awesome"),
   sidebarLayout(
     sidebarPanel(
+      radioButtons(
+        label=h5("Event class"),
+        inputId="source", 
+        choices=c("TF","Pathway", "Histopathology"),
+        inline=TRUE),
       pickerInput(
         inputId = "picker_adverse", 
         choices = sort(unique(firstact[['Histopathology']]$event)),
@@ -56,10 +61,11 @@ tabPanel(
         inputId = "default_background",
         label = "Use default from paper (None)"
       ),
+      hr(),
       materialSwitch(
         inputId = "include_same_time",
         value=T,
-        label=h5("Regard first activation at the same time as time concordant",
+        label=h5("Include same time as time concordant",
                  bsButton("q1_2", label = "", icon = icon("question"),size = "extra-small")
                  )
         ),
@@ -68,15 +74,85 @@ tabPanel(
         id = "q1_2", 
         title = "Temporal relation",
         content = "Define whether events with first activation at the same time should be considered as time-concordant or not. As default this is included due to evidence for co-occurrence in the same time series and absence of evidence suggesting a different temporal order."
-        )
+        ),
+      hr(),
+      sliderTextInput("pval", "P-value cut-off:",
+        choices = c(0.0001,0.001,0.01,0.05,0.1,1),selected = 1,
+        grid = TRUE
+      )
       ),# close sidePanel
     mainPanel(
+      h2("Summary Table"),
+      conditionalPanel(
+        condition = "input.source == 'Histopathology'",
+        strong('WARNING: Adverse and background time series are defined based on histopathology. Therefore statistics for histopathology is biased and should be treated with caution.'),
+        hr()
+      ),
+      dataTableOutput("stats")%>%
+        withSpinner(color="#F25D18"),
+      h2('Plots'),
+      
       tabsetPanel(
-        type = "tabs",
-        tabPanel(title = "TFs",dataTableOutput("stats_TF")),
-        tabPanel(title = "Pathway",dataTableOutput("stats_pathway")),
-        tabPanel(title = "Histopathology",dataTableOutput("stats_histo"))
+        tabPanel(
+          title = "Multiple metrics overview",
+          pickerInput(
+            inputId = "picker_metrics",
+            label=h5("Time concordance metrics to show"),
+            multiple=T,
+            selected = c('ratio_active','ratio_bg','TPR','PPV','pval'),
+            options = list(
+              `actions-box` = TRUE, 
+              size = 12,
+              liveSearch=T
+            ), 
+            choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total')
+          ),
+          plotOutput("plot_pairs",
+                     hover = "plot_hover",
+                     height='1000px')%>%
+            withSpinner(color="#F25D18")
+        ),
+        tabPanel(
+          title='Two metrics in detail',
+          fluidRow(
+            column(4,
+              pickerInput(
+                inputId = "picker_metrics_x",
+                label="x-axis",
+                multiple=F,
+                selected = c('TPR'),
+                options = list(`actions-box` = TRUE, size = 12,liveSearch=T), 
+                choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total')
+                ),
+              prettyCheckbox(
+                inputId = "logarithmic_x",
+                label = "Logarithmic x-axis", 
+                value = F
+                )
+              ),
+            column(
+              4,
+              pickerInput(
+                inputId = "picker_metrics_y",
+                label="y-axis",
+                multiple=F,
+                selected = c('pval'),
+                options = list(`actions-box` = TRUE, size = 12,liveSearch=T), 
+                choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total')
+              ),
+              prettyCheckbox(
+                inputId = "logarithmic_y",
+                label = "Logarithmic y-axis", 
+                value = TRUE
+              )
+            )
+          )
+        ,
+          ggiraphOutput("plots_standard")%>%
+            withSpinner(color="#F25D18")
+        
         )
+      )
       )# close mainPanel
     )# close sidebarLayout
   )# close TabPanel

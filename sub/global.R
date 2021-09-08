@@ -3,15 +3,21 @@ library(shiny)
 library(shinyWidgets)
 library(shinyBS)
 library(ComplexHeatmap)
+library(shiny)
+library(cowplot)
 library(DT)
 library(ggridges)
 library(tidyverse)
+library(scales)
 library(viridis)
-
+library(GGally)
+library(shinycssloaders)
+library(ggiraph)
 
 source('sub/misc_utils.R')
 
 firstact=readRDS('files/firstact.rds')
+firstact$Histopathology=firstact$Histopathology%>%mutate(direction=1)
 n_ts_per_event=readRDS('files/n_ts_per_event.rds')
 n_ts_per_event_freq=readRDS('files/n_ts_per_event_freq.rds')
 
@@ -125,10 +131,18 @@ get_enrichment_directional=function(Yes, notactive_yes, No,notactive_no){
                       nrow = 2,
                       dimnames = list(Pathway = c("Present", "Not present"),
                                       Pathology = c("Present", "Not present")))
-  stats=fisher.test(contingency)
+  stats=fisher.test(contingency, alternative = "greater")
   return(stats)
 }
 
+filter_by_temporal_relation=function(df,include_same_time){
+  if(include_same_time){
+    df_new=df%>%filter(as.numeric(time_index_source)<=as.numeric(time_index_target))
+  }else{
+    df_new=df%>%filter(as.numeric(time_index_source)<as.numeric(time_index_target))
+  }
+  return(df_new)
+}
 get_stats=function(source_events, select_target,bg_target, include_same_time){
 #Get positive cases  
   df_act_cond=firstact$Histopathology%>%
@@ -140,12 +154,10 @@ get_stats=function(source_events, select_target,bg_target, include_same_time){
     mutate(time_index_source=time_index)%>%
     select(-time_index)%>%
     inner_join(df_act_cond)
-  
+
+    
     df_act_freq=df_act%>%
-      filter(ifelse(include_same_time,
-                    time_index_source<time_index_target,
-                    time_index_source<=time_index_target)
-             )%>%
+      filter_by_temporal_relation(df = ., include_same_time)%>%
       group_by(event,direction)%>%
       summarise(active=n())
     n_act_freq=df_act%>%select(COMPOUND_NAME, rDOSE_LEVEL)%>%unique()%>%nrow()
@@ -175,8 +187,11 @@ get_stats=function(source_events, select_target,bg_target, include_same_time){
     mutate('ratio_active'=active/n_cond_active,
            'ratio_bg'=bg/n_cond_bg,
            'jaccard'=active/(n_cond_active+bg),
-           'PPV'=active/n_cond_active,
-           'TPR'=active/(active+bg))%>%
+           'TPR'=active/n_cond_active,
+           'PPV'=active/(active+bg),
+           'n_active_total'=n_act_freq,
+           'n_bg_total'=n_bg_freq)%>%
+    mutate('lift'=(active/(n_cond_active+n_cond_bg))/(n_cond_active/(n_cond_bg+n_cond_active)*((active+bg)/(n_cond_bg+n_cond_active))))%>%
     mutate('odds_ratio'=get_enrichment_directional(Yes = active,
                                                    notactive_yes = bg,
                                                    No = n_cond_active-active,
@@ -186,7 +201,10 @@ get_stats=function(source_events, select_target,bg_target, include_same_time){
                                                    notactive_yes = bg,
                                                    No = n_cond_active-active,
                                                    notactive_no = n_cond_bg-bg
-           )$p.value)%>%select(-n_cond_bg, -n_cond_active)%>%format_direction()
+           )$p.value)%>%select(-n_cond_bg, -n_cond_active)%>%format_direction()%>%
+    arrange(pval)
 
-return(list('df_result'=df_result, 'n_act_freq'=n_act_freq, 'n_bg_freq'=n_bg_freq))
+return(df_result)
 }
+cols <- c('Down'="#00468BFF", 'Up'="#ED0000FF")
+

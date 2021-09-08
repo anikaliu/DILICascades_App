@@ -367,10 +367,10 @@
     },
     "ggplot2": {
       "Package": "ggplot2",
-      "Version": "3.3.3",
+      "Version": "3.3.5",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "3eb6477d01eb5bbdc03f7d5f70f2733e"
+      "Hash": "d7566c471c7b17e095dd023b9ef155ad"
     },
     "ggrepel": {
       "Package": "ggrepel",
@@ -406,6 +406,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "fd028aa45f6785d7e83c0ed896b45904"
+    },
+    "gridExtra": {
+      "Package": "gridExtra",
+      "Version": "2.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7d7f283939f563670a697165b2cf5560"
     },
     "gtable": {
       "Package": "gtable",
@@ -792,12 +799,26 @@
       "Repository": "CRAN",
       "Hash": "6e3b6ae7fe02b5859e4bb277f218b8ae"
     },
+    "shinyBS": {
+      "Package": "shinyBS",
+      "Version": "0.61",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f895dafd39733c4a70d425f605a832e7"
+    },
     "shinyWidgets": {
       "Package": "shinyWidgets",
       "Version": "0.6.0",
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "7dd5f3ee96c64a47fdbc6e437ff1c7e1"
+    },
+    "shinyjs": {
+      "Package": "shinyjs",
+      "Version": "2.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9ddfc91d4280eaa34c2103951538976f"
     },
     "sourcetools": {
       "Package": "sourcetools",
@@ -882,6 +903,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "5540dc30a203a43a1ce5dc6a89532b3b"
+    },
+    "viridis": {
+      "Package": "viridis",
+      "Version": "0.6.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "424d1285b7372d39806abb19467e4df4"
     },
     "viridisLite": {
       "Package": "viridisLite",

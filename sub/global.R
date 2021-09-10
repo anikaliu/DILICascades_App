@@ -17,7 +17,12 @@ library(ggiraph)
 source('sub/misc_utils.R')
 
 firstact=readRDS('files/firstact.rds')
-firstact$Histopathology=firstact$Histopathology%>%mutate(direction=1)
+topact=readRDS('files/topact.rds')
+
+get_topstats=function(topact, conds){
+  
+}
+
 n_ts_per_event=readRDS('files/n_ts_per_event.rds')
 n_ts_per_event_freq=readRDS('files/n_ts_per_event_freq.rds')
 
@@ -53,19 +58,17 @@ summarise_to_stats=function(source_events, target_events, select_source,select_t
                 pivot_wider(id_cols=c('COMPOUND_NAME','rDOSE_LEVEL'),names_from=eventtype,names_prefix='event_',
                             values_from=event,values_fill=list(time_index=0)))%>%
     rowwise()%>%
-    mutate(description=case_when(timeindex_source==0~paste0('ONLY\ [', paste0(select_target, collapse = '\ OR \ '),']'),
-                                 timeindex_target==0~paste0('ONLY\ [', paste0(select_source, collapse = '\ OR \ '),']'),
-                                 timeindex_source==timeindex_target~paste0('[',paste0(select_source, collapse = '\ OR \ '), 
-                                                 ']\ AND\ [',paste0(select_target, collapse = '\ OR \ '), 
-                                                 ']\ AT THE SAME TIME'),
-                                timeindex_source<timeindex_target~paste0('[',paste0(select_source, collapse = '\ OR \ '), ']\ BEFORE [\ ',paste0(select_target, collapse = '\ OR \ '),']'),
-                           timeindex_source>timeindex_target~paste0('[',paste0(select_source, collapse = '\ OR \ '), ']\ AFTER [\ ',paste0(select_target, collapse = '\ OR \ '),']')))%>%
-    mutate(class=case_when(timeindex_source==0~'only_target',
-                           timeindex_target==0~'only_source',
+    mutate(description=case_when(timeindex_source==0~'Only later event activated in time-series',
+                                 timeindex_target==0~'Only preceding event activated in time-series',
+                                 timeindex_source==timeindex_target~'First activation of preceding and later event at the same time',
+                                timeindex_source<timeindex_target~'First activation of preceding event before later event',
+                           timeindex_source>timeindex_target~'First activation of preceding event after later event'))%>%
+    mutate(class=case_when(timeindex_source==0~'only_later',
+                           timeindex_target==0~'only_preceding',
                            timeindex_source==timeindex_target~'same_time',
                            timeindex_source<timeindex_target~'before',
                            timeindex_source>timeindex_target~'after'))%>%
-    mutate(class=factor(class, levels=c('before','same_time','after','only_source','only_target')))%>%
+    mutate(class=factor(class, levels=c('before','same_time','after','only_preceding','only_later')))%>%
     ungroup()%>%
     mutate(time_source=factor(timeindex_source, levels=c(1:8, 0)))%>%
     mutate(time_target=factor(timeindex_target, levels=c(1:8, 0)))
@@ -96,33 +99,39 @@ heatmap_firstact=function(df){
   col_dose=brewer.pal(3,'Greys')
   names(col_dose)=rev(c('rLow','rMiddle', 'rHigh'))
   col_class=c(brewer.pal(3, 'RdYlBu'),grey.colors(2,start=0, end=0.5))
-  names(col_class)=c('before','same_time', 'after', 'only_source', 'only_target')
+  names(col_class)=c('before','same_time', 'after', 'only_preceding', 'only_later')
   column_ha = HeatmapAnnotation(df=annot_col,col = list(rDOSE_LEVEL=col_dose, class=col_class))
   ht=Heatmap(mat, top_annotation = column_ha, 
-             cluster_columns = F, col=rev(viridis(8)), na_col = grey(0.95),
+             cluster_columns = F,cluster_rows=F, col=rev(viridis(8)), na_col = grey(0.95),
              heatmap_legend_param = list(at = seq(1:8),labels=c("3 hr","6 hr","9 hr","24 hr",
                                                                 "4 day","8 day","15 day","29 day"), title = "time", legend_gp = gpar(fill = rev(viridis(8)))
              ))
   
   return(ht)
 }
-plot_hist=function(eventclass,select_event){
+plot_hist=function(eventclass,select_event,type){
   library(ggrepel)
   df=n_ts_per_event[[eventclass]]
   
-  ggplot(df, aes(n))+
+  g=ggplot(df, aes(n))+
     geom_histogram(binwidth = 1, fill=grey(0.6))+
-    geom_text_repel(data=df%>%filter(event %in% select_event),aes(x=n, label=event), y=-0.005*n_ts_per_event_freq[[eventclass]], min.segment.length = 0.001)+
-    geom_segment(data=df%>%filter(event %in% select_event),aes(x=n, xend=n,label=event), y=-0.005*n_ts_per_event_freq[[eventclass]], yend=0)+
-    geom_point(data=df%>%filter(event %in% select_event),aes(x=n), y=-0.005*n_ts_per_event_freq[[eventclass]])+
+    # geom_text_repel(data=df%>%filter(event %in% select_event),aes(x=n, label=event), y=-0.005*n_ts_per_event_freq[[eventclass]], min.segment.length = 0.001)+
+    # geom_segment(data=df%>%filter(event %in% select_event),aes(x=n, xend=n,label=event), y=-0.005*n_ts_per_event_freq[[eventclass]], yend=0)+
+    geom_point_interactive(data=df%>%filter(event %in% select_event),aes(x=n,tooltip = event, data_id = event ), y=0)+
     # geom_vline(xintercept = df%>%.$n, color='red')+
-    xlab('Number of time-series with event')+
-    ylim(-0.013*n_ts_per_event_freq[[eventclass]],NA)+
+    xlab(paste0('Number of time-series with ',eventclass,' event'))+
+    # ylim(-0.013*n_ts_per_event_freq[[eventclass]],NA)+
     theme_minimal()+
-    ggtitle(stringr::str_wrap(paste0('Frequency of\ ', paste0(select_event, collapse=',\ '),
-                                     '\ among\ ', eventclass,'\ events'),70))
-  
-}
+    ggtitle(paste0('Frequency of\ ',type,'\ events'))
+  girafe(ggobj = g,width_svg = 4, height_svg = 3,
+          options = list(opts_hover_inv(css = "opacity:0.5"),
+                         opts_hover(css = "fill:wheat;stroke:orange;r:6pt;"),
+                         opts_selection(type = "single")
+          )
+  )
+
+  }
+
 
 ####One anchoring event####
 
@@ -201,7 +210,7 @@ get_stats=function(source_events, select_target,bg_target, include_same_time){
                                                    notactive_yes = bg,
                                                    No = n_cond_active-active,
                                                    notactive_no = n_cond_bg-bg
-           )$p.value)%>%select(-n_cond_bg, -n_cond_active)%>%format_direction()%>%
+           )$p.value)%>%select(-n_cond_bg, -n_cond_active)%>%
     arrange(pval)
 
 return(df_result)

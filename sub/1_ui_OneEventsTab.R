@@ -82,6 +82,12 @@ tabPanel(
       )
       ),# close sidePanel
     mainPanel(
+      conditionalPanel(
+        condition = "input.picker_adverse == ''",
+        strong('Please select adverse histopathology to calculate time concordance metrics.')
+      ),
+      conditionalPanel(
+        condition = "input.picker_adverse != ''",
       h2("Summary Table"),
       conditionalPanel(
         condition = "input.source == 'Histopathology'",
@@ -152,6 +158,7 @@ tabPanel(
             withSpinner(color="#F25D18")
         
         )
+      )
       )
       )# close mainPanel
     )# close sidebarLayout

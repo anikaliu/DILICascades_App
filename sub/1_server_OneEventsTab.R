@@ -57,26 +57,24 @@ output$plot_pairs=renderPlot({
 })
 
 output$plots_standard=renderggiraph({
-  gg1=ggplot(stats_filtered()%>%
-              mutate(tooltip=paste0(event, ' (', direction, ')')), 
-            aes(TPR, PPV, color=direction), alpha=0.8)+
-    geom_point_interactive(aes(tooltip = tooltip, data_id = tooltip ))+
+  gg1=ggplot(stats_filtered(), aes(TPR, PPV, color=direction), alpha=0.8)+
+    geom_point_interactive(aes(tooltip = event, data_id = event ))+
     scale_color_manual(values = cols)+
     theme_bw()+
     theme(legend.position = 'None')
 
-  gg3=ggplot(stats_filtered()%>%
-               mutate(tooltip=paste0(event, ' (', direction, ')')), 
-             aes_string(input$picker_metrics_x, input$picker_metrics_y, color='direction'), alpha=0.8)+
-    geom_point_interactive(aes(tooltip = tooltip, data_id = tooltip )) +
+  gg3=ggplot(stats_filtered(),aes_string(input$picker_metrics_x, input$picker_metrics_y, color='direction'), alpha=0.8)+
+    geom_point_interactive(aes(tooltip = event, data_id = event )) +
     scale_color_manual(values = cols)+
     theme_bw()+
     scale_x_continuous(trans = ifelse(input$logarithmic_x,"log10","identity"))+
     scale_y_continuous(trans = ifelse(input$logarithmic_y,"log10","identity"))
-  girafe( ggobj = plot_grid(gg1, gg3, rel_widths = c(3,4)), width_svg = 8, height_svg = 4,
-          options = list(opts_hover_inv(css = "opacity:0.5"),
-                         opts_hover(css = "fill:wheat;stroke:orange;r:6pt;"),
-                         opts_selection(type = "multiple")
-                         )
-          )
+  girafe(
+    ggobj = plot_grid(gg1, gg3, rel_widths = c(3,4)), 
+    width_svg = 8, height_svg = 4,
+    options = list(opts_hover_inv(css = "opacity:0.5"),
+                   opts_hover(css = "fill:wheat;stroke:orange;r:6pt;"),
+                   opts_selection(type = "single")
+                   )
+    )
 })

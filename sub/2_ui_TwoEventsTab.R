@@ -40,11 +40,9 @@ tabPanel(
         inputId = "select_target", label='Event', multiple=T,
         options = pickerOptions(liveSearch=T), choices = NULL,
         selected = adverse_cond),
-      conditionalPanel(
-        condition= 'input.select_target == "Histopathology"',
-        radioButtons(inputId="bg_histo", 
-                     label="Which histopathology is tolerated in background time series?", 
-                     choices=c("None","Not selected", "Specify"),inline=TRUE, selected = "Histopathology")
+      actionButton(
+        inputId = "default_target",
+        label = "Use adverse conditions from paper"
       )
     ),
     
@@ -52,19 +50,34 @@ tabPanel(
     # Show a plot of the generated distribution
     
     mainPanel(
-      h3('1) Frequency of events in comparison to events of the same class'),
-      fluidRow(
-        column(6,title='Source distribution', plotOutput("source_hist", height = 300)),
-        column(6,title='Target distribution',plotOutput("target_hist", height = 300))
+      conditionalPanel(
+        condition = "input.select_source == ''||input.select_target==''",
+        strong("Please select events of interest to calculate time concordance.")
       ),
-      h3('2) Overview of time series with at least one of the events'),
-      textOutput("value"),
-      tableOutput("first_stats_summary"),
-      h3('3) Individual time series with at least one of the events'),
-      h4('Heatmap'),
-      plotOutput("main_heatmap", height = 300),
-      h4('Table'),
-      dataTableOutput("first_stats")
+      conditionalPanel(
+        condition = "input.select_source != ''&&input.select_target!=''",
+        h3('Definitions'),
+        strong("Definition of preceding event (Source)"),
+        textOutput("selected_source"),
+        strong("Definition of later event (Target)"),
+        textOutput("selected_target"),
+        h3('Results'),
+        tabsetPanel(
+          tabPanel(title = 'Overview',
+                   tableOutput("first_stats_summary"),
+                   hr(),
+                   fluidRow(
+                     column(6,title='Source distribution', ggiraphOutput("source_hist")),
+                     column(6,title='Target distribution',ggiraphOutput("target_hist"))
+                   )%>%
+                     withSpinner(color="#F25D18")
+                   ),
+          tabPanel(title='Individual time series',
+                   plotOutput("main_heatmap", height = 300)%>%
+                     withSpinner(color="#F25D18"), 
+                   dataTableOutput("first_stats"))
+        )
+      )
     )
   )
 )

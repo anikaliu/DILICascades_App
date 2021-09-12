@@ -32,9 +32,8 @@ output$stats = DT::renderDataTable({
            TPR=signif(TPR,3),
            PPV=signif(PPV,3),
            lift=signif(lift,3),
-           logFC=signif(logFC,3),
            odds_ratio=signif(odds_ratio,3))%>%
-    filter(pval<input$pval)%>%
+    filter(pval<=input$pval)%>%
     DT::datatable(escape=F, filter = "top", 
                   extensions = "Buttons", rownames = F,
                   option = list(scrollX = T, 
@@ -50,7 +49,9 @@ stats_filtered <- reactive({
 })
 
 output$plot_pairs=renderPlot({
-  ggpairs(stats_filtered()%>%select_at(c('direction', input$picker_metrics)),
+  variance=stats_filtered()%>%ungroup()%>%summarise(across(active:colnames(.)[length(colnames(.))],var))%>%t()
+  variable=setdiff(rownames(variance)[(variance>0)],NA)
+  ggpairs(stats_filtered()%>%select_at(c('direction', intersect(input$picker_metrics, variable))),
           mapping=aes(color=direction, alpha=0.9),showStrips = T,
             upper = list(continuous = "density", combo = "box_no_facet"))+
     theme_bw()+
@@ -59,13 +60,15 @@ output$plot_pairs=renderPlot({
 })
 
 output$plots_standard=renderggiraph({
-  gg1=ggplot(stats_filtered(), aes(TPR, PPV, color=direction), alpha=0.8)+
+  stats_filtered_tmp=stats_filtered()%>%rowwise()%>%
+    mutate(event=gsub(event, pattern = "\'", replacement = '"'))
+  gg1=ggplot(stats_filtered_tmp, aes(TPR, PPV, color=direction), alpha=0.8)+
     geom_point_interactive(aes(tooltip = event, data_id = event ))+
     scale_color_manual(values = cols)+
     theme_bw()+
     theme(legend.position = 'None')
 
-  gg3=ggplot(stats_filtered(),aes_string(input$picker_metrics_x, input$picker_metrics_y, color='direction'), alpha=0.8)+
+  gg3=ggplot(stats_filtered_tmp,aes_string(input$picker_metrics_x, input$picker_metrics_y, color='direction'), alpha=0.8)+
     geom_point_interactive(aes(tooltip = event, data_id = event )) +
     scale_color_manual(values = cols)+
     theme_bw()+

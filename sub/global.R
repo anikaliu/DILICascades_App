@@ -230,10 +230,11 @@ get_stats=function(source,top_events, select_target,bg_target, include_same_time
                                                    No = n_cond_active-active,
                                                    notactive_no = n_cond_bg-bg
            )$p.value)%>%select(-n_cond_bg, -n_cond_active)%>%
-    left_join(df_acttop)%>%
     arrange(pval)
   if(source!='Histopathology'){
-    df_result=df_result%>%left_join(df_acttop)
+    df_result=df_result%>%
+      left_join(df_acttop)%>%
+      mutate(logFC=signif(logFC,3))
   }
 return(df_result)
 }

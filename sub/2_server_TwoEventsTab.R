@@ -38,7 +38,8 @@ first_stats=reactive({
 })
 
 topstats=reactive({
-  req(input$include_same_time, target_events(),input$wtf, input$select_source, input$select_target)
+  req(input$include_same_time, target_events(),input$wtf!='Histopathology', input$select_source, input$select_target)
+  if(input$wtf!='Histopathology'){
   df_target=target_events()%>%
     filter(event %in% input$select_target)%>%
     group_by(COMPOUND_NAME, rDOSE_LEVEL)%>%
@@ -60,6 +61,8 @@ topstats=reactive({
            class=factor(class, levels=c('before','same_time','after','only_preceding','only_later')))%>%
     group_by(COMPOUND_NAME, rDOSE_LEVEL, direction, event, class)%>%
     filter(abs(logFC)==max(abs(logFC)))
+  
+  }
 })
 ####Table####
 output$first_stats_summary=renderTable(first_stats()%>%group_by(class, description)%>%summarise(n=n()))
@@ -103,6 +106,7 @@ output$target_hist=renderggiraph({
 
 output$logFC=renderggiraph({
   req(topstats())
+  if(input$wtf!='Histopathology'){
   g=ggplot(topstats()%>%order_rdose_levels()%>%mutate(condition=paste0(COMPOUND_NAME,' (', rDOSE_LEVEL,')')), 
            aes(class,logFC))+
     geom_boxplot(outlier.shape = NA)+
@@ -119,4 +123,5 @@ output$logFC=renderggiraph({
                         opts_selection(type = "single")
          )
   )
+  }
 }) 

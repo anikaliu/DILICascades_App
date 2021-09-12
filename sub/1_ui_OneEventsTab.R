@@ -90,12 +90,11 @@ tabPanel(
         condition = "input.picker_adverse != ''",
       h2("Summary Table"),
       conditionalPanel(
-        condition = "input.source == 'Histopathology'",
+        condition = "input.wtf == 'Histopathology'",
         strong('WARNING: Adverse and background time series are defined based on histopathology. Therefore statistics for histopathology is biased and should be treated with caution.'),
         hr()
       ),
-      dataTableOutput("stats")%>%
-        withSpinner(color="#F25D18"),
+      dataTableOutput("stats")%>%withSpinner(color="#F25D18"),
       h2('Plots'),
       
       tabsetPanel(

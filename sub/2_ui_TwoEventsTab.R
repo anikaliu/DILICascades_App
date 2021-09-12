@@ -75,7 +75,7 @@ tabPanel(
                    )%>%
                      withSpinner(color="#F25D18"), 
                    conditionalPanel(
-                     condition = "input.select_source != 'Histopathology'",
+                     condition = "input.wtf != 'Histopathology'",
                      h4('Distribution of max. mean logFC by time concordance'),
                      ggiraphOutput("logFC",height="300px")
                    )

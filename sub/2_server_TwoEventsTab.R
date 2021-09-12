@@ -78,8 +78,8 @@ output$first_stats = DT::renderDataTable({
 output$time_definition=renderTable(
   data.frame(SACRIFICE_PERIOD=c("3 hr","6 hr","9 hr","24 hr","4 day","8 day","15 day","29 day"))%>%
     order_timepoints()%>%
-    mutate(timeindex=as.numeric(SACRIFICE_PERIOD))%>%
-    column_to_rownames(SACRIFICE_PERIOD)%>%
+    mutate(timeindex=as.character(as.integer(as.numeric(SACRIFICE_PERIOD))))%>%
+    column_to_rownames('SACRIFICE_PERIOD')%>%
     t()
   )
 

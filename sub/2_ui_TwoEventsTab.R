@@ -82,9 +82,12 @@ tabPanel(
                    ),
           tabPanel(
             title='Individual time series',
-            tableOutput("time_definition"),
+            h5('Heatmap'),
             plotlyOutput("main_heatmap", height = "5%")%>%
-              withSpinner(color="#F25D18"), 
+              withSpinner(color="#F25D18"),
+            h5('Color legend'),
+            tableOutput("time_definition"),
+            h5('Table'),
             dataTableOutput("first_stats"))
         )
       )

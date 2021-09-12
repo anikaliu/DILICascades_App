@@ -105,7 +105,7 @@ heatmap_firstact=function(df){
   mat=bind_rows(m_target,m_source)%>%left_join(annot_col)%>%
     pivot_wider(id_cols = c('condition','class','rDOSE_LEVEL'),
                 names_from=event, values_from=timeindex)%>%
-    arrange(class)%>%
+    arrange_at(c('class','target',unique(m_source$event)))%>%
     ungroup()
   # mat[is.na(mat)]=0
   

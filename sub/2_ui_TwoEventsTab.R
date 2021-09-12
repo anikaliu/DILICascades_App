@@ -14,13 +14,14 @@ tabPanel(
         title = "Preceding event",
         content = "This is the event which comes first (Source node). Multiple events can be selected."),
       radioButtons(
-        inputId="source", 
+        inputId="wtf", 
         label="Event class", 
         choices=c("TF","Pathway", "Histopathology"),
+        selected = "Pathway",
         inline=TRUE),
       pickerInput(
         inputId = "select_source", label='Event', multiple=T,
-        options = pickerOptions(liveSearch=T), 
+        options = pickerOptions(`actions-box` = TRUE, liveSearch=T), 
         choices = NULL),
     
       h4("Later event",
@@ -38,7 +39,7 @@ tabPanel(
         choices=c("TF","Pathway", "Histopathology"),inline=TRUE, selected = "Histopathology"),
       pickerInput(
         inputId = "select_target", label='Event', multiple=T,
-        options = pickerOptions(liveSearch=T), choices = NULL,
+        options = pickerOptions(`actions-box` = TRUE, liveSearch=T), choices = NULL,
         selected = adverse_cond),
       actionButton(
         inputId = "default_target",
@@ -64,18 +65,27 @@ tabPanel(
         h3('Results'),
         tabsetPanel(
           tabPanel(title = 'Overview',
+                   h4('Time concordance class definitions'),
                    tableOutput("first_stats_summary"),
                    hr(),
+                   h4('Overall frequency of events'),
                    fluidRow(
-                     column(6,title='Source distribution', ggiraphOutput("source_hist")),
-                     column(6,title='Target distribution',ggiraphOutput("target_hist"))
+                     column(6,title='Source distribution', ggiraphOutput("source_hist",height="250px")),
+                     column(6,title='Target distribution',ggiraphOutput("target_hist",height="250px"))
                    )%>%
-                     withSpinner(color="#F25D18")
-                   ),
-          tabPanel(title='Individual time series',
-                   plotOutput("main_heatmap", height = 300)%>%
                      withSpinner(color="#F25D18"), 
-                   dataTableOutput("first_stats"))
+                   conditionalPanel(
+                     condition = "input.select_source != 'Histopathology'",
+                     h4('Distribution of max. mean logFC by time concordance'),
+                     ggiraphOutput("logFC",height="300px")
+                   )
+                   ),
+          tabPanel(
+            title='Individual time series',
+            tableOutput("time_definition"),
+            plotlyOutput("main_heatmap", height = "5%")%>%
+              withSpinner(color="#F25D18"), 
+            dataTableOutput("first_stats"))
         )
       )
     )

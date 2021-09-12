@@ -1,4 +1,9 @@
 library(tidyverse)
+format_direction=function(df){
+  df_new=df%>%mutate(direction=case_when(direction==-1~ 'Down',
+                                         direction==1 ~'Up'))
+  return(df_new)
+}
 
 pw_annot=read.csv('files/pathway_msigdbr.csv')
 first_tf=read.csv('prep/first_activation/dorothea/ABC_firstactive_logFC_0.csv', row.names = 1)%>%
@@ -38,7 +43,7 @@ saveRDS(n_ts_per_event, 'files/n_ts_per_event.rds')
 n_ts_per_event_freq=lapply(n_ts_per_event, function(x){x%>%group_by(n)%>%summarise(freq=n())%>%max(.$freq)})
 saveRDS(n_ts_per_event_freq, 'files/n_ts_per_event_freq.rds')
 
-top_tf=read.csv('prep/sigstats/dorothea_ABC/top_logFC_adverse.csv', row.names = 1)%>%
+top_tf=read.csv('prep/sigstats/dorothea_ABC/sig_logFC_adverse.csv', row.names = 1)%>%
   mutate(event=gene)%>%arrange(event)%>%
   select(-gene)%>%rowwise()%>%
   
@@ -46,9 +51,11 @@ top_tf=read.csv('prep/sigstats/dorothea_ABC/top_logFC_adverse.csv', row.names = 
   mutate(COMPOUND_NAME=gsub(COMPOUND_NAME, pattern = '\\ ',replacement = '_'))%>%
   mutate(event=paste0(event, ' (', direction, ')'))
 
-top_pathway=read.csv('prep/sigstats/reactome/top_logFC_adverse.csv', row.names = 1)%>%
-  mutate(event=gene)%>%arrange(event)%>%
-  select(-gene)%>%rowwise()%>%
+top_pathway=read.csv('prep/sigstats/reactome/sig_logFC_adverse.csv', row.names = 1)%>%
+  mutate(gs_name=gene)%>%left_join(pw_annot%>%select(gs_name, gs_description)%>%unique())%>%
+  mutate(event=gs_description)%>%
+  select(-gs_name, -gs_description, -gene)%>%
+  arrange(event)%>%rowwise()%>%
   format_direction()%>%
   mutate(COMPOUND_NAME=gsub(COMPOUND_NAME, pattern = '\\ ',replacement = '_'))%>%
   mutate(event=paste0(event, ' (', direction, ')'))

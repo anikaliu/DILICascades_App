@@ -105,13 +105,13 @@ tabPanel(
             inputId = "picker_metrics",
             label=h5("Time concordance metrics to show"),
             multiple=T,
-            selected = c('ratio_active','ratio_bg','TPR','PPV','pval'),
+            selected = c('ratio_active','ratio_bg','TPR','PPV','pval','logFC'),
             options = list(
               `actions-box` = TRUE, 
               size = 12,
               liveSearch=T
             ), 
-            choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total')
+            choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total','logFC')
           ),
           plotOutput("plot_pairs",
                      hover = "plot_hover",
@@ -128,7 +128,7 @@ tabPanel(
                 multiple=F,
                 selected = c('TPR'),
                 options = list(`actions-box` = TRUE, size = 12,liveSearch=T), 
-                choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total')
+                choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total','logFC')
                 ),
               prettyCheckbox(
                 inputId = "logarithmic_x",
@@ -144,7 +144,7 @@ tabPanel(
                 multiple=F,
                 selected = c('pval'),
                 options = list(`actions-box` = TRUE, size = 12,liveSearch=T), 
-                choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total')
+                choices = c('ratio_active','ratio_bg','jaccard','TPR','PPV','pval','active','bg','lift','odds_ratio','n_active_total','n_bg_total','logFC')
               ),
               prettyCheckbox(
                 inputId = "logarithmic_y",

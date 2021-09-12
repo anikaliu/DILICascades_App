@@ -5,12 +5,14 @@ library(shinyBS)
 library(ComplexHeatmap)
 library(shiny)
 library(cowplot)
+library(plotly)
 library(DT)
 library(ggridges)
 library(tidyverse)
 library(scales)
 library(viridis)
 library(GGally)
+library(shinyHeatmaply)
 library(shinycssloaders)
 library(ggiraph)
 
@@ -82,31 +84,36 @@ heatmap_firstact=function(df){
   library(ComplexHeatmap)
   library(RColorBrewer)
   rownames(df)=NULL
-  mat=df%>%mutate(condition=paste0(COMPOUND_NAME, ' (',rDOSE_LEVEL,')'))%>%
-    arrange(class,timeindex_source,timeindex_target)%>%
-    mutate(source=ifelse(timeindex_source==0,NA, timeindex_source),
-           target =ifelse(timeindex_target==0,NA, timeindex_target))%>%
-    select(condition, source, target)%>%
-    column_to_rownames('condition')%>%
-    t()
+  m_source=df%>%mutate(condition=paste0(COMPOUND_NAME, ' (',rDOSE_LEVEL,')'))%>%
+    mutate(event=event_source, timeindex=timeindex_source)%>%
+    select(COMPOUND_NAME, rDOSE_LEVEL,condition, event, timeindex)%>%unique()%>%
+    filter(!is.na(event))%>%
+    separate_rows(event, sep='\ AND\ ')
+  
+  m_target=df%>%mutate(condition=paste0(COMPOUND_NAME, ' (',rDOSE_LEVEL,')'))%>%
+    mutate(event=event_target, timeindex=timeindex_target)%>%
+    select(COMPOUND_NAME, rDOSE_LEVEL,condition, event, timeindex)%>%unique()%>%
+    filter(!is.na(event))%>%
+    group_by(COMPOUND_NAME, rDOSE_LEVEL,condition)%>%
+    filter(timeindex==min(timeindex))%>%
+    mutate(event='target')
   
   annot_col=df%>%mutate(condition=paste0(COMPOUND_NAME, ' (',rDOSE_LEVEL,')'))%>%
     arrange(class,time_source, time_target)%>%
-    select(condition,rDOSE_LEVEL,class)%>%
-    column_to_rownames('condition')%>%
-    order_rdose_levels()
+    select(condition,rDOSE_LEVEL,class)
   
-  col_dose=brewer.pal(3,'Greys')
-  names(col_dose)=rev(c('rLow','rMiddle', 'rHigh'))
-  col_class=c(brewer.pal(3, 'RdYlBu'),grey.colors(2,start=0, end=0.5))
-  names(col_class)=c('before','same_time', 'after', 'only_preceding', 'only_later')
-  column_ha = HeatmapAnnotation(df=annot_col,col = list(rDOSE_LEVEL=col_dose, class=col_class))
-  ht=Heatmap(mat, top_annotation = column_ha, 
-             cluster_columns = F,cluster_rows=F, col=rev(viridis(8)), na_col = grey(0.95),
-             heatmap_legend_param = list(at = seq(1:8),labels=c("3 hr","6 hr","9 hr","24 hr",
-                                                                "4 day","8 day","15 day","29 day"), title = "time", legend_gp = gpar(fill = rev(viridis(8)))
-             ))
+  mat=bind_rows(m_target,m_source)%>%left_join(annot_col)%>%
+    pivot_wider(id_cols = c('condition','class','rDOSE_LEVEL'),
+                names_from=event, values_from=timeindex)%>%
+    arrange(class)%>%
+    ungroup()
+  # mat[is.na(mat)]=0
   
+  
+  ht=heatmaply(mat%>%select(-class, -rDOSE_LEVEL)%>%column_to_rownames('condition')%>%t(),
+               Rowv = FALSE,Colv = FALSE,
+               col_side_colors=mat%>%select(class, condition)%>%column_to_rownames('condition'), 
+               showticklabels = T, margins = c(10,200))
   return(ht)
 }
 plot_hist=function(eventclass,select_event,type){
@@ -119,11 +126,11 @@ plot_hist=function(eventclass,select_event,type){
     # geom_segment(data=df%>%filter(event %in% select_event),aes(x=n, xend=n,label=event), y=-0.005*n_ts_per_event_freq[[eventclass]], yend=0)+
     geom_point_interactive(data=df%>%filter(event %in% select_event),aes(x=n,tooltip = event, data_id = event ), y=0)+
     # geom_vline(xintercept = df%>%.$n, color='red')+
-    xlab(paste0('Number of time-series with ',eventclass,' event'))+
+    xlab(paste0('Number of time-series with \n ',eventclass,' event'))+
     # ylim(-0.013*n_ts_per_event_freq[[eventclass]],NA)+
     theme_minimal()+
     ggtitle(paste0('Frequency of\ ',type,'\ events'))
-  girafe(ggobj = g,width_svg = 4, height_svg = 3,
+  girafe(ggobj = g,width_svg = 3,height_svg = 3,
           options = list(opts_hover_inv(css = "opacity:0.5"),
                          opts_hover(css = "fill:wheat;stroke:orange;r:6pt;"),
                          opts_selection(type = "single")
@@ -152,19 +159,31 @@ filter_by_temporal_relation=function(df,include_same_time){
   }
   return(df_new)
 }
-get_stats=function(source_events, select_target,bg_target, include_same_time){
+get_stats=function(source,top_events, select_target,bg_target, include_same_time){
 #Get positive cases  
   df_act_cond=firstact$Histopathology%>%
     filter(event %in% select_target)%>%
     mutate(eventtype='target', time_index_target=time_index, event_target=event)%>%
     group_by(COMPOUND_NAME,rDOSE_LEVEL)%>%summarise(time_index_target=min(time_index_target))
   
-  df_act=source_events%>%
+  df_act=firstact[[source]]%>%
     mutate(time_index_source=time_index)%>%
     select(-time_index)%>%
     inner_join(df_act_cond)
 
-    
+  if(source!='Histopathology'){
+  df_acttop=top_events%>%
+    mutate(time_index_source=time_index)%>%
+    select(-time_index)%>%
+    inner_join(df_act_cond)%>%
+    filter_by_temporal_relation(df = ., include_same_time)%>%
+    group_by(COMPOUND_NAME, rDOSE_LEVEL, event, direction)%>%
+    filter(abs(logFC)==max(abs(logFC)))%>%
+    group_by(event, direction)%>%
+    summarise(logFC=abs(mean(logFC)))
+  }
+  
+  
     df_act_freq=df_act%>%
       filter_by_temporal_relation(df = ., include_same_time)%>%
       group_by(event,direction)%>%
@@ -176,7 +195,7 @@ get_stats=function(source_events, select_target,bg_target, include_same_time){
     mutate(eventtype='target', time_index_target=time_index, event_target=event)%>%
     select(time_index_target, COMPOUND_NAME, event_target, rDOSE_LEVEL)%>%unique()
   
-  df_bg=source_events%>%
+  df_bg=firstact[[source]]%>%
     mutate(time_index_source=time_index)%>%
     select(-time_index)%>%
     left_join(df_not_in_bg_cond)%>%
@@ -211,8 +230,11 @@ get_stats=function(source_events, select_target,bg_target, include_same_time){
                                                    No = n_cond_active-active,
                                                    notactive_no = n_cond_bg-bg
            )$p.value)%>%select(-n_cond_bg, -n_cond_active)%>%
+    left_join(df_acttop)%>%
     arrange(pval)
-
+  if(source!='Histopathology'){
+    df_result=df_result%>%left_join(df_acttop)
+  }
 return(df_result)
 }
 cols <- c('Down'="#00468BFF", 'Up'="#ED0000FF")

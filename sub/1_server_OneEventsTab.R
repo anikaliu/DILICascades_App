@@ -17,7 +17,8 @@ observeEvent(input$default_background, {
 
 stats=reactive({
   req(input$picker_adverse, input$source)
-  get_stats(source_events=firstact[[input$source]],
+  get_stats(source=input$source,
+            top_events=topact[[input$source]],
             bg_target=input$picker_background,
             select_target=input$picker_adverse,
             include_same_time = input$include_same_time)
@@ -31,6 +32,7 @@ output$stats = DT::renderDataTable({
            TPR=signif(TPR,3),
            PPV=signif(PPV,3),
            lift=signif(lift,3),
+           logFC=signif(logFC,3),
            odds_ratio=signif(odds_ratio,3))%>%
     filter(pval<input$pval)%>%
     DT::datatable(escape=F, filter = "top", 

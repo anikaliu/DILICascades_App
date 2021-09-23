@@ -180,7 +180,7 @@ get_stats=function(source,top_events, select_target,bg_target, include_same_time
     group_by(COMPOUND_NAME, rDOSE_LEVEL, event, direction)%>%
     filter(abs(logFC)==max(abs(logFC)))%>%
     group_by(event, direction)%>%
-    summarise(logFC=abs(mean(logFC)))
+    summarise(logFC=abs(median(logFC)))
   }
   
   

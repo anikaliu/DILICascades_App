@@ -22,4 +22,9 @@ in order to consider both severity and frequency of events in a single numerical
 <img src="../www/histopath.png" width="60%", align="middle">
 
 ## Citation
-The app was developed by Anika Liu (<a href="mailto:al862@cam.ac.uk" target="_blank"><i class="far fa-paper-plane"></i></a>) under the supervision of Dr. Andreas Bender, Dr. Namshik Han and Dr. Jordi Munoz-Muriedas. 
+
+[Deriving time-concordant event cascades from gene expression data: A case study for Drug-Induced Liver Injury (DILI)](https://doi.org/10.1101/2021.09.23.461089)
+Anika Liu, Namshik Han, Jordi Munoz-Muriedas, Andreas Bender
+bioRxiv 2021.09.23.461089
+
+The app was developed by Anika Liu (<a href="mailto:al862@cam.ac.uk" target="_blank"><i class="far fa-paper-plane"></i></a>) under the supervision of Dr. Andreas Bender, Dr. Namshik Han and Dr. Jordi Munoz-Muriedas. The app repository is available in  [Github](https://github.com/anikaliu/DILICascades_App).

@@ -3,6 +3,26 @@
     "Version": "4.1.2",
     "Repositories": [
       {
+        "Name": "BioCsoft",
+        "URL": "https://bioconductor.org/packages/3.14/bioc"
+      },
+      {
+        "Name": "BioCann",
+        "URL": "https://bioconductor.org/packages/3.14/data/annotation"
+      },
+      {
+        "Name": "BioCexp",
+        "URL": "https://bioconductor.org/packages/3.14/data/experiment"
+      },
+      {
+        "Name": "BioCworkflows",
+        "URL": "https://bioconductor.org/packages/3.14/workflows"
+      },
+      {
+        "Name": "BioCbooks",
+        "URL": "https://bioconductor.org/packages/3.14/books"
+      },
+      {
         "Name": "CRAN",
         "URL": "https://cran.rstudio.com"
       }
@@ -29,17 +49,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "b1a93bed5debda5775636086fdca017b",
-      "Requirements": []
-    },
-    "BiocVersion": {
-      "Package": "BiocVersion",
-      "Version": "3.14.0",
-      "Source": "Bioconductor",
-      "git_url": "https://git.bioconductor.org/packages/BiocVersion",
-      "git_branch": "master",
-      "git_last_commit": "aa56d93",
-      "git_last_commit_date": "2021-05-19",
-      "Hash": "e57437f82a5c13263a9cf442b9796ba3",
       "Requirements": []
     },
     "ComplexHeatmap": {
@@ -119,8 +128,7 @@
       "Hash": "61fac01c73abf03ac72e88dc3952c1e3",
       "Requirements": [
         "GlobalOptions",
-        "crayon",
-        "rjson"
+        "crayon"
       ]
     },
     "GlobalOptions": {
@@ -307,17 +315,6 @@
         "sass"
       ]
     },
-    "cachem": {
-      "Package": "cachem",
-      "Version": "1.0.6",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "648c5b3d71e6a37e3043617489a0a0e9",
-      "Requirements": [
-        "fastmap",
-        "rlang"
-      ]
-    },
     "callr": {
       "Package": "callr",
       "Version": "3.7.0",
@@ -376,24 +373,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "ade39cb0b7493d6ae56c299bfc596fe7",
-      "Requirements": [
-        "cluster"
-      ]
-    },
-    "cluster": {
-      "Package": "cluster",
-      "Version": "2.1.3",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "c5f8447373ec2a0f593c694024e5b7ee",
-      "Requirements": []
-    },
-    "codetools": {
-      "Package": "codetools",
-      "Version": "0.2-18",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "019388fc48e48b3da0d3a76ff94608a8",
       "Requirements": []
     },
     "colorspace": {
@@ -402,14 +381,6 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "bb4341986bc8b914f0f0acf2e4a3f2f7",
-      "Requirements": []
-    },
-    "commonmark": {
-      "Package": "commonmark",
-      "Version": "1.8.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "2ba81b120c1655ab696c935ef33ea716",
       "Requirements": []
     },
     "cowplot": {
@@ -649,7 +620,6 @@
       "Repository": "CRAN",
       "Hash": "618609b42c9406731ead03adf5379850",
       "Requirements": [
-        "codetools",
         "iterators"
       ]
     },
@@ -685,9 +655,7 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "8f905e7f70ac42e5b0e39d6ba360dd44",
-      "Requirements": [
-        "cluster"
-      ]
+      "Requirements": []
     },
     "generics": {
       "Package": "generics",
@@ -922,19 +890,6 @@
         "yaml"
       ]
     },
-    "httpuv": {
-      "Package": "httpuv",
-      "Version": "1.6.5",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "97fe71f0a4a1c9890e6c2128afa04bc0",
-      "Requirements": [
-        "R6",
-        "Rcpp",
-        "later",
-        "promises"
-      ]
-    },
     "httr": {
       "Package": "httr",
       "Version": "1.4.3",
@@ -1072,6 +1027,17 @@
       "Repository": "CRAN",
       "Hash": "7ce2733a9826b3aeb1775d56fd305472",
       "Requirements": []
+    },
+    "markdown": {
+      "Package": "markdown",
+      "Version": "1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "61e4a10781dd00d7d81dd06ca9b94e95",
+      "Requirements": [
+        "mime",
+        "xfun"
+      ]
     },
     "matrixStats": {
       "Package": "matrixStats",
@@ -1418,14 +1384,6 @@
         "stringr"
       ]
     },
-    "rjson": {
-      "Package": "rjson",
-      "Version": "0.2.21",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "f9da75e6444e95a1baf8ca24909d63b9",
-      "Requirements": []
-    },
     "rlang": {
       "Package": "rlang",
       "Version": "1.0.3",
@@ -1544,7 +1502,6 @@
       "Requirements": [
         "MASS",
         "TSP",
-        "cluster",
         "colorspace",
         "gclus",
         "qap",
@@ -1568,15 +1525,12 @@
       "Requirements": [
         "R6",
         "bslib",
-        "cachem",
-        "commonmark",
         "crayon",
         "ellipsis",
         "fastmap",
         "fontawesome",
         "glue",
         "htmltools",
-        "httpuv",
         "jsonlite",
         "later",
         "lifecycle",

@@ -2,7 +2,6 @@ library(shinyjs)
 library(shiny)
 library(shinyWidgets)
 library(shinyBS)
-library(ComplexHeatmap)
 library(cowplot)
 library(plotly)
 library(DT)
@@ -26,7 +25,6 @@ get_topstats=function(topact, conds){
 }
 
 n_ts_per_event=readRDS('files/n_ts_per_event.rds')
-n_ts_per_event_freq=readRDS('files/n_ts_per_event_freq.rds')
 
 adverse_cond=c("Biliary Hyperplasia (low)",
                "Biliary Hyperplasia (null)",
@@ -38,7 +36,7 @@ adverse_cond=c("Biliary Hyperplasia (low)",
                "Hepatocellular Single Cell Necrosis (low)",
                "Hepatocellular Single Cell Necrosis (null)",
                "Increased Hepatocellular Mitosis (high)",
-               "Inflammation (high","Inflammation (low)")  
+               "Inflammation (high)","Inflammation (low)")  
 ####Two events####
 summarise_to_stats=function(source_events, target_events, select_source,select_target){
   df_new=source_events%>%
@@ -81,7 +79,7 @@ summarise_to_stats=function(source_events, target_events, select_source,select_t
   return(df_new)
 }
 heatmap_firstact=function(df){
-  library(ComplexHeatmap)
+  # library(ComplexHeatmap)
   library(RColorBrewer)
   rownames(df)=NULL
   m_source=df%>%mutate(condition=paste0(COMPOUND_NAME, ' (',rDOSE_LEVEL,')'))%>%
@@ -122,15 +120,11 @@ plot_hist=function(eventclass,select_event,type){
   
   g=ggplot(df, aes(n))+
     geom_histogram(binwidth = 1, fill=grey(0.6))+
-    # geom_text_repel(data=df%>%filter(event %in% select_event),aes(x=n, label=event), y=-0.005*n_ts_per_event_freq[[eventclass]], min.segment.length = 0.001)+
-    # geom_segment(data=df%>%filter(event %in% select_event),aes(x=n, xend=n,label=event), y=-0.005*n_ts_per_event_freq[[eventclass]], yend=0)+
     geom_point_interactive(data=df%>%filter(event %in% select_event),aes(x=n,tooltip = event, data_id = event ), y=0)+
-    # geom_vline(xintercept = df%>%.$n, color='red')+
     xlab(paste0('Number of time-series with \n ',eventclass,' event'))+
-    # ylim(-0.013*n_ts_per_event_freq[[eventclass]],NA)+
     theme_minimal()+
     ggtitle(paste0('Frequency of\ ',type,'\ events'))
-  girafe(ggobj = g,width_svg = 3,height_svg = 3,
+  girafe(ggobj = g,width_svg = 5,height_svg = 3,
           options = list(opts_hover_inv(css = "opacity:0.5"),
                          opts_hover(css = "fill:wheat;stroke:orange;r:6pt;"),
                          opts_selection(type = "single")
@@ -187,7 +181,7 @@ get_stats=function(source,top_events, select_target,bg_target, include_same_time
     df_act_freq=df_act%>%
       filter_by_temporal_relation(df = ., include_same_time)%>%
       group_by(event,direction)%>%
-      summarise(active=n())
+      summarise(TP=n())
     n_act_freq=df_act%>%select(COMPOUND_NAME, rDOSE_LEVEL)%>%unique()%>%nrow()
   ###Background###
   df_not_in_bg_cond=firstact$Histopathology%>%
@@ -205,31 +199,32 @@ get_stats=function(source,top_events, select_target,bg_target, include_same_time
     select(COMPOUND_NAME, rDOSE_LEVEL, event, direction)%>%
     unique()%>%
     group_by(event,direction)%>%
-    summarise(bg=n())
+    summarise(FP=n())
 
   n_bg_freq=df_bg%>%select(COMPOUND_NAME, rDOSE_LEVEL)%>%unique()%>%nrow()
   df_result=left_join(df_act_freq,df_bg_freq)%>%
     ungroup()%>%
     rowwise()%>%
-    mutate(n_cond_bg=n_bg_freq, n_cond_active=n_act_freq, bg=ifelse(is.na(bg),0,bg))%>%
-    mutate('ratio_active'=active/n_cond_active,
-           'ratio_bg'=bg/n_cond_bg,
-           'jaccard'=active/(n_cond_active+bg),
-           'TPR'=active/n_cond_active,
-           'PPV'=active/(active+bg),
-           'n_active_total'=n_act_freq,
-           'n_bg_total'=n_bg_freq)%>%
-    mutate('lift'=(active/(n_cond_active+n_cond_bg))/(n_cond_active/(n_cond_bg+n_cond_active)*((active+bg)/(n_cond_bg+n_cond_active))))%>%
-    mutate('odds_ratio'=get_enrichment_directional(Yes = active,
-                                                   notactive_yes = bg,
-                                                   No = n_cond_active-active,
-                                                   notactive_no = n_cond_bg-bg
-                                                    )$estimate,
-           'pval'=get_enrichment_directional(Yes = active,
-                                                   notactive_yes = bg,
-                                                   No = n_cond_active-active,
-                                                   notactive_no = n_cond_bg-bg
-           )$p.value)%>%select(-n_cond_bg, -n_cond_active)%>%
+    mutate(n_LE_absent=n_bg_freq, n_LE_present=n_act_freq, FP=ifelse(is.na(FP),0,FP))%>%
+    mutate('Odds Ratio'=get_enrichment_directional(Yes = TP,
+                                                   notactive_yes = FP,
+                                                   No = n_LE_present-TP,
+                                                   notactive_no = n_LE_absent-FP
+    )$estimate,
+    'pval'=get_enrichment_directional(Yes = TP,
+                                      notactive_yes = FP,
+                                      No = n_LE_present-TP,
+                                      notactive_no = n_LE_absent-FP
+    )$p.value)%>%
+    mutate(
+           'FPR'=FP/n_LE_absent,
+           'TPR'=TP/n_LE_present,
+           'Jaccard'=TP/(n_LE_present+FP),
+           'PPV'=TP/(TP+FP),
+           'n_LE_present'=n_LE_present,
+           'n_LE_absent'=n_LE_absent)%>%
+    mutate('Lift'=(TP)/(n_LE_present*(TP+FP))*(n_LE_absent+n_LE_present))%>%
+    select(-n_LE_absent, -n_LE_present)%>%
     arrange(pval)
   if(source!='Histopathology'){
     df_result=df_result%>%

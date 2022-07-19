@@ -91,7 +91,7 @@ output$time_definition=renderTable(
 output$main_heatmap=renderPlotly({
   req(input$select_source,input$select_target)
   #first_stats()%>%heatmap_firstact()%>%draw()
-  first_stats()%>%heatmap_firstact()%>%layout(width=800, height=200)
+  first_stats()%>%heatmap_firstact()%>%layout(width=800, height=350)
   
   })
 
@@ -108,11 +108,12 @@ output$logFC=renderggiraph({
   req(topstats())
   if(input$wtf!='Histopathology'){
   g=ggplot(topstats()%>%order_rdose_levels()%>%mutate(condition=paste0(COMPOUND_NAME,' (', rDOSE_LEVEL,')')), 
-           aes(class,logFC))+
+           aes(class,abs(logFC)))+
     geom_boxplot(outlier.shape = NA)+
     facet_wrap(~stringr::str_wrap(event, width = 20), ncol = 4)+
     geom_jitter_interactive(aes(tooltip = condition, data_id = condition, color=class),
                             width=0.3, alpha=0.8)+
+    ylab('absolute logFC')+
     theme_bw()+
     scale_color_viridis_d(begin=0.2)+
     theme(axis.text.x = element_blank(), axis.title.x = element_blank(), axis.ticks.x =element_blank())

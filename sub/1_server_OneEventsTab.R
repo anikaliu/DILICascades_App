@@ -26,13 +26,12 @@ stats=reactive({
 output$stats = DT::renderDataTable({
   stats()%>%
     mutate(pval=signif(pval, 3),
-           ratio_active=signif(ratio_active,3),
-           ratio_bg=signif(ratio_bg,3),
-           jaccard=signif(jaccard,3),
+           FPR=signif(FPR,3),
+           Jaccard=signif(Jaccard,3),
            TPR=signif(TPR,3),
            PPV=signif(PPV,3),
-           lift=signif(lift,3),
-           odds_ratio=signif(odds_ratio,3))%>%
+           Lift=signif(Lift,3),
+           `Odds Ratio`=signif(`Odds Ratio`,3))%>%
     filter(pval<=input$pval)%>%
     DT::datatable(escape=F, filter = "top", 
                   extensions = "Buttons", rownames = F,
@@ -49,8 +48,9 @@ stats_filtered <- reactive({
 })
 
 output$plot_pairs=renderPlot({
-  variance=stats_filtered()%>%ungroup()%>%summarise(across(active:colnames(.)[length(colnames(.))],var))%>%t()
-  variable=setdiff(rownames(variance)[(variance>0)],NA)
+  variance=stats_filtered()%>%ungroup()%>%summarise(across(TP:colnames(.)[length(colnames(.))],var))%>%t()
+  n_levels=stats_filtered()%>%ungroup()%>%summarise(across(TP:colnames(.)[length(colnames(.))],function(x){length(unique(x))}))%>%t()
+  variable=intersect(setdiff(rownames(variance)[(variance>0)],c(NA, NaN)),rownames(n_levels)[(n_levels>2)])
   ggpairs(stats_filtered()%>%select_at(c('direction', intersect(input$picker_metrics, variable))),
           mapping=aes(color=direction, alpha=0.9),showStrips = T,
             upper = list(continuous = "density", combo = "box_no_facet"))+
